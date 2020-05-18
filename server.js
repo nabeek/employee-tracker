@@ -88,10 +88,10 @@ function runTracker() {
 
 function viewAllEmployees() {
   let query =
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, employee.manager_id AS manager ";
-  query += "FROM employee, role, department ";
+    "SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, CONCAT(m.first_name,' ',m.last_name) AS manager ";
   query +=
-    "WHERE employee.role_id = role.id AND role.department_id = department.id";
+    "FROM (employee e, role, department) LEFT JOIN employee m ON e.manager_id = m.id ";
+  query += "WHERE e.role_id = role.id AND role.department_id = department.id";
 
   connection.query(query, function (err, res) {
     if (err) throw err;

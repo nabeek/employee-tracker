@@ -86,19 +86,74 @@ function runTracker() {
 
 // Employee-specific functions
 
-// function viewAllEmployees() {
-//   let query =
-//     "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary FROM employee, role, department ";
-//   query +=
-//     "WHERE employee.role_id = role.id, role.department_id = department.id";
+function viewAllEmployees() {
+  let query =
+    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, employee.manager_id AS manager ";
+  query += "FROM employee, role, department ";
+  query +=
+    "WHERE employee.role_id = role.id AND role.department_id = department.id";
 
-//   connection.query(query, function (err, res) {
-//     if (err) throw err;
-//     console.log(" ");
-//     console.table(res);
-//     runTracker();
-//   });
-// }
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+    console.log(" ");
+    console.table(res);
+    runTracker();
+  });
+}
+
+function addEmployee() {
+  connection.query("SELECT title FROM role", function (err, res) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "newEmpFirstName",
+          type: "input",
+          message: "What is the employee's first name?",
+        },
+        {
+          name: "newEmpLastName",
+          type: "input",
+          message: "What is the employee's last name?",
+        },
+        {
+          name: "newEmpRole",
+          type: "list",
+          message: "Which role does the new employee have?",
+          choices: function () {
+            let roleArray = [];
+            for (var i = 0; i < res.length; i++) {
+              roleArray.push(res[i].title);
+            }
+            return roleArray;
+          },
+        },
+      ])
+      .then(answer => {
+        connection.query(
+          "SELECT id FROM role WHERE ?",
+          { name: answer.newEmpRole },
+          function (err, res) {
+            connection.query(
+              "INSERT INTO employee SET ?",
+              {
+                first_name: answer.newEmpFirstName,
+                last_name: answer.newEmpLastName,
+                role_id: res[0].id,
+                // manager_id: ,
+              },
+              function (err, res) {
+                if (err) throw err;
+                console.log(`${answer.newEmpFirstName} has been added`);
+                console.log(" ");
+                runTracker();
+              }
+            );
+          }
+        );
+      });
+  });
+}
 
 // Department-specific functions
 
@@ -126,7 +181,7 @@ function addDepartment() {
 }
 
 function viewAllDepartments() {
-  const deptQuery = "SELECT * FROM department";
+  const deptQuery = "SELECT name AS department FROM department";
 
   connection.query(deptQuery, function (err, res) {
     if (err) throw err;
@@ -193,7 +248,7 @@ function addRole() {
 
 function viewAllRoles() {
   let query =
-    "SELECT role.id, role.title, role.salary, department.name FROM role, department WHERE role.department_id = department.id";
+    "SELECT role.id, role.title, role.salary, department.name AS department FROM role, department WHERE role.department_id = department.id";
 
   connection.query(query, function (err, res) {
     if (err) throw err;

@@ -35,6 +35,9 @@ connection.connect(err => {
     }));
   });
 
+  console.log(" ");
+  console.log("Welcome to Employee Tracker");
+  console.log(" ");
   runTracker();
 });
 
@@ -50,6 +53,7 @@ function runTracker() {
         "View All Employees by Manager",
         "View All Roles",
         "View All Departments",
+        "View Payroll",
         "Add Employee",
         "Add Role",
         "Add Department",
@@ -58,6 +62,7 @@ function runTracker() {
         "Remove Department",
         "Update Employee Role",
         "Update Employee Manager",
+        "Exit",
       ],
     })
     .then(answer => {
@@ -113,6 +118,13 @@ function runTracker() {
         case "Remove Role":
           removeRole();
           break;
+
+        case "View Payroll":
+          viewPayroll();
+          break;
+
+        case "Exit":
+          exitApp();
       }
     });
 }
@@ -168,7 +180,7 @@ function viewAllEmployeesManager() {
 }
 
 function viewAllEmployeesDepartment() {
-  connection.query("SELECT * FROM employee", function (err, res) {
+  connection.query("SELECT * FROM department", function (err, res) {
     if (err) throw err;
     inquirer
       .prompt([
@@ -180,15 +192,22 @@ function viewAllEmployeesDepartment() {
         },
       ])
       .then(answer => {
-        connection.query(
-          `SELECT CONCAT(employee.first_name, ' ', employee.last_name) AS employee, role.title FROM (employee, role, department) WHERE employee.role_id = role.id AND department.id = ${answer.department}`,
-          function (err, res) {
-            if (err) throw err;
+        let query =
+          "SELECT CONCAT(employee.first_name, ' ', employee.last_name) AS employee, role.title FROM employee ";
+        query += `JOIN role ON employee.role_id = role.id JOIN department ON role.department_id = department.id WHERE department.id = ${answer.department}`;
+        connection.query(query, function (err, res) {
+          if (err) throw err;
+          console.log(" ");
+
+          if (res === undefined || res.length == 0) {
+            console.log("There are no employees in that department");
             console.log(" ");
+          } else {
             console.table(res);
-            runTracker();
           }
-        );
+
+          runTracker();
+        });
       });
   });
 }
@@ -339,71 +358,6 @@ function updateEmployeeManager() {
   });
 }
 
-// Department-specific functions
-
-function addDepartment() {
-  inquirer
-    .prompt({
-      name: "newDeptName",
-      type: "input",
-      message: "What department would you like to add?",
-    })
-    .then(answer => {
-      connection.query(
-        "INSERT INTO department SET ?",
-        {
-          name: answer.newDeptName,
-        },
-        function (err, res) {
-          if (err) throw err;
-          console.log(" ");
-          console.log(`${answer.newDeptName} has been added`);
-          console.log(" ");
-          runTracker();
-        }
-      );
-    });
-}
-
-function viewAllDepartments() {
-  connection.query("SELECT name AS department FROM department", function (
-    err,
-    res
-  ) {
-    if (err) throw err;
-    console.log(" ");
-    console.table(res);
-    runTracker();
-  });
-}
-
-function removeDept() {
-  connection.query("SELECT * FROM department", function (err, res) {
-    if (err) throw err;
-
-    inquirer
-      .prompt({
-        name: "removedDept",
-        type: "list",
-        message: "Which department would you like to remove?",
-        choices: readDepartments,
-      })
-      .then(answer => {
-        connection.query(
-          "DELETE FROM department WHERE ?",
-          { id: answer.removedDept },
-          function (err, res) {
-            if (err) throw err;
-            console.log(" ");
-            console.log("A department has been removed");
-            console.log(" ");
-            runTracker();
-          }
-        );
-      });
-  });
-}
-
 // Role-specific functions
 
 function addRole() {
@@ -485,4 +439,90 @@ function removeRole() {
         );
       });
   });
+}
+
+// Department-specific functions
+
+function addDepartment() {
+  inquirer
+    .prompt({
+      name: "newDeptName",
+      type: "input",
+      message: "What department would you like to add?",
+    })
+    .then(answer => {
+      connection.query(
+        "INSERT INTO department SET ?",
+        {
+          name: answer.newDeptName,
+        },
+        function (err, res) {
+          if (err) throw err;
+          console.log(" ");
+          console.log(`${answer.newDeptName} has been added`);
+          console.log(" ");
+          runTracker();
+        }
+      );
+    });
+}
+
+function viewAllDepartments() {
+  connection.query("SELECT name AS departments FROM department", function (
+    err,
+    res
+  ) {
+    if (err) throw err;
+    console.log(" ");
+    console.table(res);
+    runTracker();
+  });
+}
+
+function removeDept() {
+  connection.query("SELECT * FROM department", function (err, res) {
+    if (err) throw err;
+
+    inquirer
+      .prompt({
+        name: "removedDept",
+        type: "list",
+        message: "Which department would you like to remove?",
+        choices: readDepartments,
+      })
+      .then(answer => {
+        connection.query(
+          "DELETE FROM department WHERE ?",
+          { id: answer.removedDept },
+          function (err, res) {
+            if (err) throw err;
+            console.log(" ");
+            console.log("A department has been removed");
+            console.log(" ");
+            runTracker();
+          }
+        );
+      });
+  });
+}
+
+function viewPayroll() {
+  let query =
+    "SELECT SUM(role.salary) AS 'annual payroll' FROM (employee, role) WHERE employee.role_id = role.id";
+
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+    console.log(" ");
+    console.table(res);
+    runTracker();
+  });
+}
+
+// Exit function
+
+function exitApp() {
+  console.log(" ");
+  console.log("Thank you for logging in");
+  console.log(" ");
+  process.exit();
 }

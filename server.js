@@ -84,10 +84,51 @@ function runTracker() {
     });
 }
 
-function viewAllDepartments() {
-  let query = "SELECT department.name FROM department";
+// Employee-specific functions
 
-  connection.query(query, function (err, res) {
+// function viewAllEmployees() {
+//   let query =
+//     "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name, role.salary FROM employee, role, department ";
+//   query +=
+//     "WHERE employee.role_id = role.id, role.department_id = department.id";
+
+//   connection.query(query, function (err, res) {
+//     if (err) throw err;
+//     console.log(" ");
+//     console.table(res);
+//     runTracker();
+//   });
+// }
+
+// Department-specific functions
+
+function addDepartment() {
+  inquirer
+    .prompt({
+      name: "newDeptName",
+      type: "input",
+      message: "What department would you like to add?",
+    })
+    .then(answer => {
+      connection.query(
+        "INSERT INTO department SET ?",
+        {
+          name: answer.newDeptName,
+        },
+        function (err, res) {
+          if (err) throw err;
+          console.log(`${answer.newDeptName} has been added`);
+          console.log(" ");
+          runTracker();
+        }
+      );
+    });
+}
+
+function viewAllDepartments() {
+  const deptQuery = "SELECT * FROM department";
+
+  connection.query(deptQuery, function (err, res) {
     if (err) throw err;
     console.log(" ");
     console.table(res);
@@ -95,8 +136,64 @@ function viewAllDepartments() {
   });
 }
 
+// Role-specific functions
+
+function addRole() {
+  connection.query("SELECT name FROM department", function (err, res) {
+    if (err) throw err;
+    inquirer
+      .prompt([
+        {
+          name: "newRoleTitle",
+          type: "input",
+          message: "What role would you like to add?",
+        },
+        {
+          name: "newRoleSalary",
+          type: "input",
+          message: "What salary should the role carry?",
+        },
+        {
+          name: "newRoleDept",
+          type: "list",
+          message: "Which department should the role fall under?",
+          choices: function () {
+            var deptArray = [];
+            for (var i = 0; i < res.length; i++) {
+              deptArray.push(res[i].name);
+            }
+            return deptArray;
+          },
+        },
+      ])
+      .then(answer => {
+        connection.query(
+          "SELECT id FROM department WHERE ?",
+          { name: answer.newRoleDept },
+          function (err, res) {
+            connection.query(
+              "INSERT INTO role SET ?",
+              {
+                title: answer.newRoleTitle,
+                salary: answer.newRoleSalary,
+                department_id: res[0].id,
+              },
+              function (err, res) {
+                if (err) throw err;
+                console.log(`${answer.newRoleTitle} has been added`);
+                console.log(" ");
+                runTracker();
+              }
+            );
+          }
+        );
+      });
+  });
+}
+
 function viewAllRoles() {
-  let query = "SELECT role.title FROM role";
+  let query =
+    "SELECT role.id, role.title, role.salary, department.name FROM role, department WHERE role.department_id = department.id";
 
   connection.query(query, function (err, res) {
     if (err) throw err;

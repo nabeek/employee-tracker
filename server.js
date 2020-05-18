@@ -23,12 +23,12 @@ function runTracker() {
       message: "What would you like to do?",
       choices: [
         "View All Employees",
-        "View All Employees by Department",
-        "View All Employees by Manager",
+        // "View All Employees by Department",
+        // "View All Employees by Manager",
         "Add Employee",
         "Remove Employee",
         "Update Employee Role",
-        "Update Employee Manager",
+        // "Update Employee Manager",
         "Add Department",
         "View All Departments",
         "Add Role",
@@ -41,13 +41,13 @@ function runTracker() {
           viewAllEmployees();
           break;
 
-        case "View All Employees by Department":
-          viewAllEmployeesDepartment();
-          break;
+        // case "View All Employees by Department":
+        //   viewAllEmployeesDepartment();
+        //   break;
 
-        case "View All Employees by Manager":
-          viewAllEmployeesManager();
-          break;
+        // case "View All Employees by Manager":
+        //   viewAllEmployeesManager();
+        //   break;
 
         case "Add Employee":
           addEmployee();
@@ -61,9 +61,9 @@ function runTracker() {
           updateEmployeeRole();
           break;
 
-        case "Update Employee Manager":
-          updateEmployeeManager();
-          break;
+        // case "Update Employee Manager":
+        //   updateEmployeeManager();
+        //   break;
 
         case "Add Department":
           addDepartment();
@@ -155,6 +155,42 @@ function addEmployee() {
   });
 }
 
+function removeEmployee() {
+  connection.query("SELECT first_name, last_name FROM employee", function (
+    err,
+    res
+  ) {
+    if (err) throw err;
+
+    inquirer
+      .prompt({
+        name: "removedEmp",
+        type: "list",
+        message: "Which employee would you like to remove?",
+        choices: function () {
+          let empArray = [];
+          for (var i = 0; i < res.length; i++) {
+            empArray.push(res[i].first_name + " " + res[i].last_name);
+          }
+          return empArray;
+        },
+      })
+      .then(answer => {
+        let name = answer.removedEmp.split(" ");
+        connection.query(
+          "DELETE FROM employee WHERE ? AND ?",
+          [{ first_name: name[0] }, { last_name: name[1] }],
+          function (err, res) {
+            if (err) throw err;
+            console.log(`${answer.removedEmp} has been removed`);
+            console.log(" ");
+            runTracker();
+          }
+        );
+      });
+  });
+}
+
 // Department-specific functions
 
 function addDepartment() {
@@ -181,9 +217,10 @@ function addDepartment() {
 }
 
 function viewAllDepartments() {
-  const deptQuery = "SELECT name AS department FROM department";
-
-  connection.query(deptQuery, function (err, res) {
+  connection.query("SELECT name AS department FROM department", function (
+    err,
+    res
+  ) {
     if (err) throw err;
     console.log(" ");
     console.table(res);

@@ -8,7 +8,7 @@ This application continues to build on previous weeks' utilization of the Inquir
 
 ## Installation and Usage
 
-Clone or fork the repo from [GitHub](https://github.com/nabeek/employee-tracker) and then run `npm install`
+Clone or fork the repo from [GitHub](https://github.com/nabeek/employee-tracker), navigate to the directory, and then run `npm install`
 
 Be sure to update the SQL connection settings in server.js, but feel free to use the included schema.sql and seed.sql files for testing purposes.
 

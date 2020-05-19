@@ -53,7 +53,7 @@ function runTracker() {
         "View All Employees by Manager",
         "View All Roles",
         "View All Departments",
-        "View Payroll",
+        "View Annual Payroll",
         "Add Employee",
         "Add Role",
         "Add Department",
@@ -119,7 +119,7 @@ function runTracker() {
           removeRole();
           break;
 
-        case "View Payroll":
+        case "View Annual Payroll":
           viewPayroll();
           break;
 
@@ -160,7 +160,7 @@ function viewAllEmployeesManager() {
       ])
       .then(answer => {
         connection.query(
-          `SELECT CONCAT(employee.first_name, ' ', employee.last_name) AS employee, role.title FROM (employee, role) WHERE manager_id = ${answer.manager} AND employee.role_id = role.id`,
+          `SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) AS employee, role.title FROM (employee, role) WHERE manager_id = ${answer.manager} AND employee.role_id = role.id`,
           function (err, res) {
             if (err) throw err;
             console.log(" ");
@@ -193,7 +193,7 @@ function viewAllEmployeesDepartment() {
       ])
       .then(answer => {
         let query =
-          "SELECT CONCAT(employee.first_name, ' ', employee.last_name) AS employee, role.title FROM employee ";
+          "SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) AS employee, role.title FROM employee ";
         query += `JOIN role ON employee.role_id = role.id JOIN department ON role.department_id = department.id WHERE department.id = ${answer.department}`;
         connection.query(query, function (err, res) {
           if (err) throw err;

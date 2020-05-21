@@ -10,6 +10,10 @@ const connection = mysql.createConnection({
   database: "employee_tracker_db",
 });
 
+let readEmployees;
+let readRoles;
+let readDepartments;
+
 connection.connect(err => {
   if (err) throw err;
 
@@ -37,10 +41,6 @@ connection.connect(err => {
   console.log(" ");
   runTracker();
 });
-
-let readEmployees;
-let readRoles;
-let readDepartments;
 
 function runTracker() {
   inquirer

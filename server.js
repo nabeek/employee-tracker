@@ -10,13 +10,10 @@ const connection = mysql.createConnection({
   database: "employee_tracker_db",
 });
 
-let readEmployees;
-let readRoles;
-let readDepartments;
-
 connection.connect(err => {
   if (err) throw err;
 
+  // Several queries are run when the app connects to provide lists of employees, roles, and departments used later
   connection.query("SELECT * FROM employee", function (error, res) {
     readEmployees = res.map(employee => ({
       name: `${employee.first_name} ${employee.last_name}`,
@@ -40,6 +37,10 @@ connection.connect(err => {
   console.log(" ");
   runTracker();
 });
+
+let readEmployees;
+let readRoles;
+let readDepartments;
 
 function runTracker() {
   inquirer
@@ -480,31 +481,29 @@ function viewAllDepartments() {
 }
 
 function removeDept() {
-  connection.query("SELECT * FROM department", function (err, res) {
-    if (err) throw err;
-
-    inquirer
-      .prompt({
-        name: "removedDept",
-        type: "list",
-        message: "Which department would you like to remove?",
-        choices: readDepartments,
-      })
-      .then(answer => {
-        connection.query(
-          "DELETE FROM department WHERE ?",
-          { id: answer.removedDept },
-          function (err, res) {
-            if (err) throw err;
-            console.log(" ");
-            console.log("A department has been removed");
-            console.log(" ");
-            runTracker();
-          }
-        );
-      });
-  });
+  inquirer
+    .prompt({
+      name: "removedDept",
+      type: "list",
+      message: "Which department would you like to remove?",
+      choices: readDepartments,
+    })
+    .then(answer => {
+      connection.query(
+        "DELETE FROM department WHERE ?",
+        { id: answer.removedDept },
+        function (err, res) {
+          if (err) throw err;
+          console.log(" ");
+          console.log("A department has been removed");
+          console.log(" ");
+          runTracker();
+        }
+      );
+    });
 }
+
+// Other functions
 
 function viewPayroll() {
   let query =
